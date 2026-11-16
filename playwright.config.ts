@@ -39,7 +39,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     //colorScheme: 'light'
     //screenshot: 'on',
-    headless: false,
+    headless: true,
+    actionTimeout: 10000,
+    navigationTimeout: 10000,
   },
 
   expect: {
