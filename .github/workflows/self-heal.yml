@@ -1,0 +1,33 @@
+# .github/workflows/self-heal.yml
+name: self-heal
+on:
+  schedule: [{ cron: '0 2 * * *' }]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  heal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci && npx playwright install --with-deps
+      - run: git checkout -b auto-heal/${{ github.run_id }}
+      - run: node scripts/heal.js
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - run: node scripts/diff-guard.js origin/main
+      - name: Open PR
+        run: |
+          git config user.name "auto-heal-bot"
+          git config user.email "harikarun@gmail.com"
+          git add tests pages test-results/suspected-bugs.md || true
+          git commit -m "chore: auto-heal Playwright tests" || exit 0
+          git push origin HEAD
+          gh pr create --fill --title "Auto-heal: fix Playwright failures"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
