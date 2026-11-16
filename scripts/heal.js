@@ -8,10 +8,18 @@ const isWin = process.platform === 'win32'; // npx needs a shell on Windows
 const run = (cmd, args) =>
   spawnSync(cmd, args, { stdio: 'inherit', shell: isWin });
 
+/* this is old run where we only cared about the extract-failures exit code, but now we also care about the playwright test exit code
+
 function runTests() {
   run('npx', ['playwright', 'test']);
   const r = run('node', ['scripts/extract-failures.js']);
   return r.status === 0; // true = no failures
+} */
+
+function runTests() {
+  const pw = run('npx', ['playwright', 'test']);
+  const ex = run('node', ['scripts/extract-failures.js']);
+  return pw.status === 0 && ex.status === 0; // both must be clean
 }
 
 const SYSTEM = `You are a test-maintenance agent for a Playwright (JavaScript) suite.

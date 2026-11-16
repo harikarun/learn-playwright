@@ -38,6 +38,20 @@ function walk(suite) {
 
 (report.suites ?? []).forEach(walk);
 
+// Load/syntax/config errors live in report.errors, not in suites
+for (const err of report.errors ?? []) {
+  failures.push({
+    file: err.location?.file ?? 'unknown',
+    line: err.location?.line,
+    title: '(file failed to load)',
+    project: 'n/a',
+    status: 'loadError',
+    error: stripAnsi(err.message),
+    snippet: stripAnsi(err.snippet),
+    attachments: [],
+  });
+}
+
 fs.writeFileSync(OUT, JSON.stringify(failures, null, 2));
 console.log(`${failures.length} failure(s) extracted -> ${OUT}`);
 process.exit(failures.length ? 1 : 0); // 0 = all green
